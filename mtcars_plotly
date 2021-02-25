@@ -1,0 +1,43 @@
+
+###  Using plotly in the webapp 
+
+p2 <- mtcars %>%
+  count(gear, carb) %>%
+  plot_ly() %>%
+  add_bars(x = ~ n, y = ~ gear, color = ~ carb, colours = "Viridis") %>%
+  layout(barmode = "stack",
+         xaxis = list(title = "Number of items"),
+         yaxis = list(title = "# gears"),
+         title = "lalala")
+
+# using main panel - sideparpanel 
+# sung multiple tabs 
+mtcars$vs <- as.factor(mtcars$vs)
+
+ui <- fluidPage(
+  navlistPanel(
+    tabPanel("tab1",
+  sidebarPanel(radioButtons("variable", "Variables to show:",
+                     c("gear" = "gear",
+                       "carb" = "carb"),
+                     inline = TRUE)),
+  mainPanel(tableOutput("data"))  ),
+  tabPanel("tab2", plotlyOutput("plo"))
+)
+)
+
+server <- function(input, output) {
+  output$data <-  renderTable({
+      mtcars %>%
+        count(input$variable, vs)
+    }, rownames = TRUE)
+  output$plo <- renderPlotly({
+    mtcars %>%
+      count(input$variable, vs) %>%
+      plot_ly() %>%
+      add_bars(x = ~ n, y = ~ input$variable, color =  ~vs, colours = "Viridis") %>%
+      layout(barmode = "stack")
+  })
+}
+
+shinyApp(ui, server)
